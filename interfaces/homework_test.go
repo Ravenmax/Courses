@@ -50,35 +50,10 @@ func (c *Container) Resolve(name string) (interface{}, error) {
 	if !exists {
 		return nil, fmt.Errorf("service '%s' not found", name)
 	}
-	// Получаем тип конструктора
-	constructorType := reflect.TypeOf(def.Constructor)
 	constructorValue := reflect.ValueOf(def.Constructor)
 
-	// Подготавливаем аргументы для конструктора
-	args := make([]reflect.Value, constructorType.NumIn())
-	for i := 0; i < constructorType.NumIn(); i++ {
-		argType := constructorType.In(i)
-
-		// Пытаемся найти зависимость по имени
-		found := false
-		for _, svc := range c.services {
-
-			instance, err := c.Resolve(svc.Name)
-			if err != nil {
-				return nil, fmt.Errorf("failed to resolve dependency %s: %w", argType.Name(), err)
-			}
-			args[i] = reflect.ValueOf(instance)
-			found = true
-			break
-
-		}
-		if !found {
-			return nil, fmt.Errorf("cannot resolve dependency %s for service %s", argType.Name(), name)
-		}
-	}
-
 	// Вызываем конструктор
-	results := constructorValue.Call(args)
+	results := constructorValue.Call(nil)
 	instance := results[0].Interface()
 	return instance, nil
 }
